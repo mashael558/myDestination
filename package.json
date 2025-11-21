@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "lint:html": "htmlhint .",
-    "perf": "lighthouse index.html --output=html --output-path=reports/lighthouse.html",
+    "perf": "lighthouse https://mashael558.github.io/myDestination/ --output=html --output-path=reports/lighthouse.html",
     "test:ui": "npx playwright test"
   },
   "devDependencies": {
