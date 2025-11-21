@@ -17,7 +17,7 @@ jobs:
           node-version: 'lts/*'
 
       - name: Install tooling
-        run: npm install --no-save htmlhint lighthouse
+        run: npm install --no-save htmlhint lighthouse http-server
 
       - name: Prepare report directory
         run: mkdir -p reports
@@ -27,17 +27,21 @@ jobs:
           set -o pipefail
           npx htmlhint "**/*.html" 2>&1 | tee reports/htmlhint-report.txt
 
-      - name: Run Lighthouse on index.html
-        env:
-          TARGET_URL: file://${{ github.workspace }}/index.html
+      - name: Run Lighthouse on local server
         run: |
-          npx lighthouse "$TARGET_URL" \
+          # Start http-server in the background on port 8080
+          npx http-server -p 8080 &
+          # Wait a few seconds for the server to start
+          sleep 5
+          # Run Lighthouse on localhost
+          npx lighthouse http://localhost:8080 \
             --only-categories=performance,accessibility,seo \
             --chrome-flags="--headless" \
             --quiet \
             --output=json \
             --output=html \
             --output-path=reports/lighthouse-report
+          # Rename output files for consistency
           mv reports/lighthouse-report.report.html reports/lighthouse-report.html
           mv reports/lighthouse-report.report.json reports/lighthouse-report.json
 
