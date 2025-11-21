@@ -1,9 +1,9 @@
 {
-  "name": "html-project",
+  "name": "my-project",
   "version": "1.0.0",
   "scripts": {
     "lint:html": "htmlhint .",
-   "perf": "lighthouse file:///C:/Users/ASUS/Downloads/MyDestination/index.html --output=html --output-path=reports/lighthouse.html"
+    "perf": "lighthouse index.html --output=html --output-path=reports/lighthouse.html",
     "test:ui": "npx playwright test"
   },
   "devDependencies": {
