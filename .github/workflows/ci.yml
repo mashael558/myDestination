@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  quality-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+
+      - name: Install tooling
+        run: npm install --no-save htmlhint lighthouse
+
+      - name: Prepare report directory
+        run: mkdir -p reports
+
+      - name: Lint HTML with HTMLHint
+        run: |
+          set -o pipefail
+          npx htmlhint "**/*.html" 2>&1 | tee reports/htmlhint-report.txt
+
+      - name: Run Lighthouse on index.html
+        env:
+          TARGET_URL: file://${{ github.workspace }}/index.html
+        run: |
+          npx lighthouse "$TARGET_URL" \
+            --only-categories=performance,accessibility,seo \
+            --chrome-flags="--headless" \
+            --quiet \
+            --output=json \
+            --output=html \
+            --output-path=reports/lighthouse-report
+          mv reports/lighthouse-report.report.html reports/lighthouse-report.html
+          mv reports/lighthouse-report.report.json reports/lighthouse-report.json
+
+      - name: Upload reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: static-site-reports
+          path: reports

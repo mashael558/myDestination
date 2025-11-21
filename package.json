@@ -1,0 +1,14 @@
+{
+  "name": "html-project",
+  "version": "1.0.0",
+  "scripts": {
+    "lint:html": "htmlhint .",
+    "perf": "lighthouse index.html --output=html --output-path=reports/lighthouse.html",
+    "test:ui": "npx playwright test"
+  },
+  "devDependencies": {
+    "htmlhint": "^1.0.0",
+    "lighthouse": "^10.0.0",
+    "playwright": "^1.40.0"
+  }
+}
