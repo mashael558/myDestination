@@ -21,11 +21,11 @@ jobs:
 
       # 3️⃣ Install tooling
       - name: Install tooling
-        run: npm install --no-save htmlhint lighthouse http-server @playwright/test
+        run: npm install --no-save htmlhint lighthouse
 
       # 4️⃣ Prepare reports directory
       - name: Prepare report directory
-        run: mkdir -p reports playwright-report
+        run: mkdir -p reports
 
       # 5️⃣ Lint all HTML files
       - name: Lint HTML with HTMLHint
@@ -33,40 +33,20 @@ jobs:
           set -o pipefail
           npx htmlhint "**/*.html" 2>&1 | tee reports/htmlhint-report.txt || true
 
-      # 6️⃣ Start local server and run Lighthouse for each HTML file
-      - name: Run Lighthouse on all HTML files
+      # 6️⃣ Run Lighthouse on GitHub Pages URL
+      - name: Run Lighthouse
         run: |
-          npx http-server -p 8080 &
-          SERVER_PID=$!
-          sleep 10
-          for page in $(find . -name "*.html" ! -path "./node_modules/*" ! -path "./reports/*"); do
-            echo "Testing $page"
-            PAGE_URL="http://localhost:8080/${page#./}"
-            REPORT_NAME=$(basename "$page" .html)
-            
-            npx lighthouse "$PAGE_URL" \
-              --only-categories=performance,accessibility,seo \
-              --chrome-flags="--headless --disable-gpu" \
-              --quiet \
-              --output=json \
-              --output=html \
-              --output-path=reports/${REPORT_NAME}-lighthouse.html || true
-          done
-          kill $SERVER_PID
+          TARGET_URL="https://mashael558.github.io/myDestination/"
+          npx lighthouse "$TARGET_URL" \
+            --only-categories=performance,accessibility,seo \
+            --chrome-flags="--headless --disable-gpu" \
+            --quiet \
+            --output=html \
+            --output-path=reports/lighthouse-report.html || true
 
-      # 7️⃣ Install Playwright browsers
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps
-
-      # 8️⃣ Run Playwright tests
-      - name: Run Playwright tests
-        run: npx playwright test --reporter=html
-
-      # 9️⃣ Upload all reports
+      # 7️⃣ Upload all reports
       - name: Upload reports
         uses: actions/upload-artifact@v4
         with:
-          name: all-reports
-          path: |
-            reports
-            playwright-report/
+          name: ci-reports
+          path: reports/
