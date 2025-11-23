@@ -21,11 +21,11 @@ jobs:
 
       # 3️⃣ Install tooling
       - name: Install tooling
-        run: npm install --no-save htmlhint lighthouse http-server
+        run: npm install --no-save htmlhint lighthouse http-server @playwright/test
 
       # 4️⃣ Prepare reports directory
       - name: Prepare report directory
-        run: mkdir -p reports
+        run: mkdir -p reports playwright-report
 
       # 5️⃣ Lint all HTML files
       - name: Lint HTML with HTMLHint
@@ -36,12 +36,9 @@ jobs:
       # 6️⃣ Start local server and run Lighthouse for each HTML file
       - name: Run Lighthouse on all HTML files
         run: |
-          # Start http-server in the background on port 8080
           npx http-server -p 8080 &
           SERVER_PID=$!
-          sleep 10  # wait for server to start
-
-          # Loop over all HTML files
+          sleep 10
           for page in $(find . -name "*.html" ! -path "./node_modules/*" ! -path "./reports/*"); do
             echo "Testing $page"
             PAGE_URL="http://localhost:8080/${page#./}"
@@ -55,13 +52,21 @@ jobs:
               --output=html \
               --output-path=reports/${REPORT_NAME}-lighthouse.html || true
           done
-
-          # Stop http-server
           kill $SERVER_PID
 
-      # 7️⃣ Upload all reports
+      # 7️⃣ Install Playwright browsers
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+
+      # 8️⃣ Run Playwright tests
+      - name: Run Playwright tests
+        run: npx playwright test --reporter=html
+
+      # 9️⃣ Upload all reports
       - name: Upload reports
         uses: actions/upload-artifact@v4
         with:
-          name: static-site-reports
-          path: reports
+          name: all-reports
+          path: |
+            reports
+            playwright-report/
