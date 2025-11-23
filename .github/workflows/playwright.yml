@@ -20,25 +20,8 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps
-
-      - name: Run Playwright tests on GitHub Pages
-        env:
-          BASE_URL: https://mashael558.github.io/myDestination/
-        run: |
-          # Create a test file dynamically
-          echo "import { test, expect } from '@playwright/test';" > tests/pages.spec.js
-          echo "const pages = ["index.html","home.html","login.html","dashboardorganizer.html","pay.html","profile.html"];" >> tests/pages.spec.js
-          echo "for (const pageName of pages) {" >> tests/pages.spec.js
-          echo "  test(pageName, async ({ page }) => {" >> tests/pages.spec.js
-          echo "    await page.goto(process.env.BASE_URL + pageName);" >> tests/pages.spec.js
-          echo "    await expect(page).toHaveURL(/.+/);" >> tests/pages.spec.js
-          echo "  });" >> tests/pages.spec.js
-          echo "}" >> tests/pages.spec.js
-          
-          # Run the tests
-          npx playwright test --reporter=html
+      - name: Run Playwright tests
+        run: npx playwright test --reporter=html
 
       - name: Upload Playwright Test Report
         uses: actions/upload-artifact@v4
