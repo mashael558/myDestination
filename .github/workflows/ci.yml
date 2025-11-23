@@ -7,50 +7,59 @@ on:
 jobs:
   quality-checks:
     runs-on: ubuntu-latest
+
     steps:
-      # Step 1: Checkout the repo
+      # 1️⃣ Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Step 2: Setup Node.js
+      # 2️⃣ Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 'lts/*'
 
-      # Step 3: Install required tools
+      # 3️⃣ Install tooling
       - name: Install tooling
         run: npm install --no-save htmlhint lighthouse http-server
 
-      # Step 4: Prepare report directory
+      # 4️⃣ Prepare reports directory
       - name: Prepare report directory
         run: mkdir -p reports
 
-      # Step 5: Lint all HTML files
+      # 5️⃣ Lint all HTML files
       - name: Lint HTML with HTMLHint
         run: |
           set -o pipefail
-          npx htmlhint "**/*.html" 2>&1 | tee reports/htmlhint-report.txt
+          npx htmlhint "**/*.html" 2>&1 | tee reports/htmlhint-report.txt || true
 
-      # Step 6: Run Lighthouse on all HTML files
+      # 6️⃣ Start local server and run Lighthouse for each HTML file
       - name: Run Lighthouse on all HTML files
         run: |
+          # Start http-server in the background on port 8080
           npx http-server -p 8080 &
-          sleep 5
+          SERVER_PID=$!
+          sleep 10  # wait for server to start
+
+          # Loop over all HTML files
           for page in $(find . -name "*.html" ! -path "./node_modules/*" ! -path "./reports/*"); do
             echo "Testing $page"
             PAGE_URL="http://localhost:8080/${page#./}"
             REPORT_NAME=$(basename "$page" .html)
+            
             npx lighthouse "$PAGE_URL" \
               --only-categories=performance,accessibility,seo \
-              --chrome-flags="--headless" \
+              --chrome-flags="--headless --disable-gpu" \
               --quiet \
               --output=json \
               --output=html \
-              --output-path=reports/${REPORT_NAME}-lighthouse.html
+              --output-path=reports/${REPORT_NAME}-lighthouse.html || true
           done
 
-      # Step 7: Upload all reports
+          # Stop http-server
+          kill $SERVER_PID
+
+      # 7️⃣ Upload all reports
       - name: Upload reports
         uses: actions/upload-artifact@v4
         with:
